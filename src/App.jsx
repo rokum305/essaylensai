@@ -27,6 +27,20 @@ const MOCK_RESULT = {
   ],
 };
 
+const STATS_URL = "https://essaylensai.onrender.com/stats";
+
+function GlassesLogo({ size = 28 }) {
+  return (
+    <svg width={size} height={size * 0.6} viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="18" r="14" stroke="#5b5ef4" strokeWidth="3.5" fill="rgba(91,94,244,0.08)" />
+      <circle cx="48" cy="18" r="14" stroke="#5b5ef4" strokeWidth="3.5" fill="rgba(91,94,244,0.08)" />
+      <path d="M30 16c1.5-3 3.5-3 4 0" stroke="#5b5ef4" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M2 14c0-4 2-6 4-6" stroke="#5b5ef4" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M62 14c0-4-2-6-4-6" stroke="#5b5ef4" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function ScoreRing({ score }) {
   const radius = 54;
   const circ = 2 * Math.PI * radius;
@@ -181,7 +195,7 @@ function Results({ data, onReset }) {
       </Card>
 
       {/* Strengths + Weaknesses */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Card>
           <SectionLabel>Strengths</SectionLabel>
           <BulletList items={data.strengths} color="#22c55e" />
@@ -234,9 +248,95 @@ function Results({ data, onReset }) {
   );
 }
 
+function VisionPage({ onBack }) {
+  const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    fetch(STATS_URL)
+      .then(r => r.json())
+      .then(d => setCount(d.essays_reviewed))
+      .catch(() => setCount(null));
+  }, []);
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto", padding: "72px 20px 80px" }}>
+      <button
+        onClick={onBack}
+        style={{
+          background: "transparent",
+          border: "1px solid #1e3055",
+          borderRadius: 8,
+          color: "#64748b",
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 13,
+          fontWeight: 600,
+          padding: "8px 16px",
+          cursor: "pointer",
+          marginBottom: 40,
+        }}
+      >
+        ← Back
+      </button>
+
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <GlassesLogo size={56} />
+        </div>
+        <h1 style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: "clamp(28px, 4.5vw, 44px)",
+          fontWeight: 800,
+          color: "#f1f5f9",
+          lineHeight: 1.15,
+          letterSpacing: "-0.025em",
+          margin: "0 0 16px 0"
+        }}>
+          See the vision with<br />
+          <span style={{ color: "#5b5ef4" }}>EssayLens</span>
+        </h1>
+        <p style={{
+          fontFamily: "Inter, sans-serif",
+          fontSize: 16, color: "#64748b",
+          lineHeight: 1.7, margin: "0 auto", maxWidth: 540
+        }}>
+          EssayLens exists to give every student honest, detailed essay feedback —
+          for free, instantly, without needing to know a teacher, counselor, or
+          tutor willing to read another draft at 11pm.
+        </p>
+      </div>
+
+      <Card style={{ marginBottom: 20, textAlign: "center" }}>
+        <SectionLabel>Essays Reviewed</SectionLabel>
+        <p style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 48, fontWeight: 800, color: "#5b5ef4", margin: 0
+        }}>
+          {count === null ? "—" : count.toLocaleString()}
+        </p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#64748b", margin: "8px 0 0 0" }}>
+          and counting
+        </p>
+      </Card>
+
+      <Card>
+        <SectionLabel>Authored By</SectionLabel>
+        <p style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 18, fontWeight: 700, color: "#f1f5f9", margin: "0 0 4px 0"
+        }}>
+          Raghunand Dayanandan
+        </p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#64748b", margin: 0 }}>
+          Plano, TX
+        </p>
+      </Card>
+    </div>
+  );
+}
+
 export default function App() {
   const [essay, setEssay] = useState("");
-  const [state, setState] = useState("input"); // input | loading | results
+  const [state, setState] = useState("input"); // input | loading | results | vision
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
 
@@ -299,21 +399,43 @@ export default function App() {
           position: "sticky", top: 0, zIndex: 10,
           background: "rgba(7,14,31,0.92)", backdropFilter: "blur(12px)"
         }}>
-          <span style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 800, fontSize: 17, color: "#f1f5f9",
-            letterSpacing: "-0.01em"
-          }}>
+          <span
+            onClick={() => setState("input")}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontWeight: 800, fontSize: 17, color: "#f1f5f9",
+              letterSpacing: "-0.01em", cursor: "pointer"
+            }}>
+            <GlassesLogo size={22} />
             Essay<span style={{ color: "#5b5ef4" }}>Lens</span>
           </span>
-          <span style={{
-            fontFamily: "Inter, sans-serif", fontSize: 12,
-            color: "#334155", background: "#0d1b36",
-            border: "1px solid #1e3055", borderRadius: 6,
-            padding: "3px 10px"
-          }}>
-            Free · No account needed
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => setState("vision")}
+              style={{
+                background: "transparent",
+                border: "1px solid #1e3055",
+                borderRadius: 6,
+                color: "#5b7bac",
+                fontFamily: "Inter, sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "5px 12px",
+                cursor: "pointer",
+              }}
+            >
+              See the Vision
+            </button>
+            <span style={{
+              fontFamily: "Inter, sans-serif", fontSize: 12,
+              color: "#334155", background: "#0d1b36",
+              border: "1px solid #1e3055", borderRadius: 6,
+              padding: "3px 10px"
+            }}>
+              Free · No account needed
+            </span>
+          </div>
         </nav>
 
         {/* Input State */}
@@ -445,6 +567,7 @@ export default function App() {
             display: "flex", flexDirection: "column", alignItems: "center",
             justifyContent: "center", minHeight: "70vh", gap: 20
           }}>
+            <GlassesLogo size={48} />
             <div style={{
               width: 48, height: 48, border: "3px solid #1e3055",
               borderTop: "3px solid #5b5ef4",
@@ -464,6 +587,11 @@ export default function App() {
         {/* Results State */}
         {state === "results" && results && (
           <Results data={results} onReset={reset} />
+        )}
+
+        {/* Vision State */}
+        {state === "vision" && (
+          <VisionPage onBack={() => setState("input")} />
         )}
       </div>
     </>

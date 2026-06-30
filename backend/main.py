@@ -24,6 +24,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 
+COUNTER_FILE = os.path.join(os.path.dirname(__file__), "essay_count.json")
+BASE_COUNT = 100
+
+def get_essay_count() -> int:
+    if not os.path.exists(COUNTER_FILE):
+        return BASE_COUNT
+    try:
+        with open(COUNTER_FILE, "r") as f:
+            return json.load(f).get("count", BASE_COUNT)
+    except Exception:
+        return BASE_COUNT
+
+def increment_essay_count() -> int:
+    count = get_essay_count() + 1
+    with open(COUNTER_FILE, "w") as f:
+        json.dump({"count": count}, f)
+    return count
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Setup
 # ─────────────────────────────────────────────────────────────────────────────
@@ -189,6 +208,11 @@ def root():
     return {"status": "EssayLens API is running"}
 
 
+@app.get("/stats")
+def stats():
+    return {"essays_reviewed": get_essay_count()}
+
+
 @app.post("/evaluate")
 def evaluate(request: EssayRequest):
     essay = request.essay.strip()
@@ -206,4 +230,5 @@ def evaluate(request: EssayRequest):
     result.setdefault("writing_feedback", {})
     result.setdefault("suggestions", [])
 
+    increment_essay_count()
     return result
