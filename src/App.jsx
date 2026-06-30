@@ -334,7 +334,6 @@ function HomePage({ onStart }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
           <StatBlock icon="📄" label="Essays Reviewed" value={displayCount.toLocaleString()} />
           <StatBlock icon="📝" label="Words Analyzed" value={(stats?.words_analyzed ?? 0).toLocaleString()} />
-          <StatBlock icon="🌎" label="Countries Reached" value={stats?.countries_reached ?? "—"} />
           <StatBlock icon="⚡" label="Avg. Analysis Time" value={stats?.avg_analysis_time ? `${stats.avg_analysis_time}s` : "—"} />
         </div>
       </Card>
