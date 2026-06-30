@@ -241,7 +241,7 @@ export default function App() {
   const [error, setError] = useState(null);
 
   // ─── SWAP THIS URL when your backend is live ───────────────────────────────
-  const BACKEND_URL = "http://localhost:8000/evaluate";
+  const BACKEND_URL = "https://essaylensai.onrender.com/evaluate";
   // ───────────────────────────────────────────────────────────────────────────
 
   const evaluate = async () => {
