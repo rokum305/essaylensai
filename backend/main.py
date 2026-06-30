@@ -15,6 +15,7 @@ FastAPI + spaCy/textstat NLP features + Gemini reasoning
 import os
 import re
 import json
+import time
 from typing import List
 
 import spacy
@@ -27,20 +28,31 @@ import google.generativeai as genai
 COUNTER_FILE = os.path.join(os.path.dirname(__file__), "essay_count.json")
 BASE_COUNT = 100
 
-def get_essay_count() -> int:
+def get_stats() -> dict:
     if not os.path.exists(COUNTER_FILE):
-        return BASE_COUNT
+        return {"count": BASE_COUNT, "total_words": 0, "total_time": 0.0}
     try:
         with open(COUNTER_FILE, "r") as f:
-            return json.load(f).get("count", BASE_COUNT)
+            data = json.load(f)
+            return {
+                "count": data.get("count", BASE_COUNT),
+                "total_words": data.get("total_words", 0),
+                "total_time": data.get("total_time", 0.0),
+            }
     except Exception:
-        return BASE_COUNT
+        return {"count": BASE_COUNT, "total_words": 0, "total_time": 0.0}
 
-def increment_essay_count() -> int:
-    count = get_essay_count() + 1
+def get_essay_count() -> int:
+    return get_stats()["count"]
+
+def record_evaluation(word_count: int, elapsed_seconds: float) -> dict:
+    stats = get_stats()
+    stats["count"] += 1
+    stats["total_words"] += word_count
+    stats["total_time"] += elapsed_seconds
     with open(COUNTER_FILE, "w") as f:
-        json.dump({"count": count}, f)
-    return count
+        json.dump(stats, f)
+    return stats
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -210,11 +222,19 @@ def root():
 
 @app.get("/stats")
 def stats():
-    return {"essays_reviewed": get_essay_count()}
+    s = get_stats()
+    avg_time = round(s["total_time"] / s["count"], 1) if s["count"] else 0
+    return {
+        "essays_reviewed": s["count"],
+        "words_analyzed": s["total_words"],
+        "avg_analysis_time": avg_time,
+    }
 
 
 @app.post("/evaluate")
 def evaluate(request: EssayRequest):
+    start_time = time.time()
+
     essay = request.essay.strip()
     if len(essay) < 100:
         raise HTTPException(status_code=400, detail="Essay too short")
@@ -230,5 +250,6 @@ def evaluate(request: EssayRequest):
     result.setdefault("writing_feedback", {})
     result.setdefault("suggestions", [])
 
-    increment_essay_count()
+    elapsed = time.time() - start_time
+    record_evaluation(features["word_count"], elapsed)
     return result
